@@ -3,13 +3,21 @@ package utils
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/ElvinEga/gofiber_starter/blacklist"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+type JWTClaims struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.StandardClaims
+}
 
 func GenerateJWT(userId string) (string, error) {
 	claims := jwt.MapClaims{
@@ -30,15 +38,35 @@ func GenerateJWTRole(userID string, role string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func VerifyJWT(c *fiber.Ctx) (string, error) {
-	tokenStr := c.Get("Authorization")[7:]
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+func VerifyJWT(c *fiber.Ctx) (userID string, role string, err error) {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return "", "", errors.New("missing token")
+	}
+
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenStr == authHeader {
+		return "", "", errors.New("invalid token format")
+	}
+
+	// Check blacklist first
+	if blacklist.IsBlacklisted(tokenStr) {
+		return "", "", errors.New("token revoked")
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims["userId"].(string), nil
+
+	if err != nil {
+		return "", "", err
 	}
-	return "", err
+
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		return claims.UserID, claims.Role, nil
+	}
+
+	return "", "", errors.New("invalid token claims")
 }
 func VerifyJWTRole(c *fiber.Ctx) (userID string, role string, err error) {
 	authHeader := c.Get("Authorization")
