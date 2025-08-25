@@ -49,7 +49,7 @@ func Register(c *fiber.Ctx) error {
 		Email:      req.Email,
 		Password:   utils.HashPassword(req.Password),
 		Username:   utils.GenerateUsername(req.Name),
-		Role:       "USER",
+		Role:       "user",
 		IsVerified: false,
 	}
 	if err := database.DB.Create(&newUser).Error; err != nil {
@@ -90,7 +90,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	token, _ := utils.GenerateJWTRole(user.ID.String(), "User")
+	token, _ := utils.GenerateJWTRole(user.ID.String(), "user")
 	return c.JSON(responses.AuthResponse{
 		Status:  "success",
 		Message: "Login successful",
