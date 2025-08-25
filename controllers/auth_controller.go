@@ -24,3 +24,19 @@ func GoogleCallback(c *fiber.Ctx) error {
 func Logout(c *fiber.Ctx) error {
 	return services.Logout(c)
 }
+
+func RefreshToken(c *fiber.Ctx) error {
+	return services.RefreshToken(c)
+}
+
+func VerifyEmail(c *fiber.Ctx) error {
+	return services.VerifyEmail(c)
+}
+
+func RequestPasswordReset(c *fiber.Ctx) error {
+	return services.RequestPasswordReset(c)
+}
+
+func ResetPassword(c *fiber.Ctx) error {
+	return services.ResetPassword(c)
+}
