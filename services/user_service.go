@@ -1,10 +1,13 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/models"
 	"github.com/ElvinEga/gofiber_starter/responses"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // Profile godoc
@@ -30,4 +33,21 @@ func GetUserByID(id string) (*models.User, error) {
 	var user models.User
 	err := database.DB.First(&user, "id = ?", id).Error
 	return &user, err
+}
+
+// services/auth_service.go
+func SendVerificationEmail(userID uuid.UUID) error {
+	user, err := GetUserByID(userID.String())
+	if err != nil {
+		return err
+	}
+
+	token := utils.GenerateSecureToken(32)
+	user.VerificationToken = token
+	database.DB.Save(user)
+
+	// Send email with verification link
+	verificationLink := fmt.Sprintf("https://yourdomain.com/verify?token=%s", token)
+	// Use email service to send verificationLink
+	return nil
 }
