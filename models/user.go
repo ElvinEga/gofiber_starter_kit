@@ -1,9 +1,8 @@
 package models
 
 import (
-	"time"
-
 	"github.com/google/uuid"
+	"time"
 )
 
 type User struct {
@@ -14,8 +13,9 @@ type User struct {
 	Password          string    `json:"-"`
 	Role              string    `json:"role"`
 	IsVerified        bool      `json:"is_verified"`
-	EmailVerifiedAt   time.Time `json:"is_email_verified"`
+	EmailVerifiedAt   time.Time `json:"email_verified_at"`
 	VerificationToken string    `json:"-"`
-	VerifiedAt        time.Time `json:"verified_at"`
+	ResetToken        string    `json:"-"`
+	ResetExpiresAt    time.Time `json:"reset_expires_at"`
 	Base
 }
