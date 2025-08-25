@@ -6,6 +6,7 @@ import (
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/models"
 	"github.com/ElvinEga/gofiber_starter/responses"
+	"github.com/ElvinEga/gofiber_starter/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -50,4 +51,52 @@ func SendVerificationEmail(userID uuid.UUID) error {
 	verificationLink := fmt.Sprintf("https://yourdomain.com/verify?token=%s", token)
 	// Use email service to send verificationLink
 	return nil
+}
+
+// controllers/user_controller.go
+func UpdateUser(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+	var updateData models.User
+
+	if err := c.BodyParser(&updateData); err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, "id = ?", userID).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusNotFound, "User not found")
+	}
+
+	// Update allowed fields only
+	user.Name = updateData.Name
+	user.Username = updateData.Username
+	database.DB.Save(&user)
+
+	return c.JSON(responses.ToUserResponse(user))
+}
+
+func ChangePassword(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+	var req struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, "id = ?", userID).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusNotFound, "User not found")
+	}
+
+	if !utils.CheckPasswordHash(req.CurrentPassword, user.Password) {
+		return utils.HandleError(c, fiber.StatusUnauthorized, "Incorrect current password")
+	}
+
+	user.Password = utils.HashPassword(req.NewPassword)
+	database.DB.Save(&user)
+
+	return c.JSON(fiber.Map{"status": "success", "message": "Password updated"})
 }
