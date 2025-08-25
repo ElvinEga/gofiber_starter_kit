@@ -7,6 +7,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Profile godoc
+// @Summary Get user profile
+// @Description Retrieve the user's profile information
+// @Tags User
+// @Accept json
+// @Produce json
+// @Success 200 {object} responses.UserResponse
+// @Failure 401 {object} responses.UserResponse
+// @Router /api/profile [get]
 func GetUserProfile(c *fiber.Ctx) error {
 	userId := c.Locals("userID").(string)
 	var user models.User
