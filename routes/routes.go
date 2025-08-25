@@ -18,18 +18,4 @@ func SetupRoutes(app *fiber.App) {
 	user := api.Group("/user", middlewares.JWTProtected())
 	user.Get("/profile", controllers.GetUserProfile)
 
-	// Tour Routes
-	api.Get("/tours", controllers.GetAllTours)
-	api.Get("/tours/:id", controllers.GetTourByID)
-	api.Get("/tours/featured", controllers.GetFeaturedTours)
-	api.Get("/tours/filter", controllers.GetFilteredTours)
-	api.Get("/tours/:id/reviews", controllers.GetTourReviews)
-	api.Post("/tours/:id/reviews", middlewares.JWTProtected(), controllers.CreateTourReview)
-
-	api.Get("/destinations", controllers.GetAllDestinations)
-	api.Get("/destinations/:id", controllers.GetDestinationByID)
-
-	api.Get("/categories", controllers.GetAllCategories)
-	api.Get("/categories/:id", controllers.GetCategoryByID)
-
 }
