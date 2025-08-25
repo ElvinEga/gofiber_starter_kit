@@ -1,44 +1,49 @@
 package config
 
 import (
-	"log"
 	"os"
-
-	"github.com/joho/godotenv"
+	"strconv"
 )
 
-var (
-	// Database file path (default "gofiber.db")
-	DBPath string
-
-	// Google OAuth credentials and redirect URL
+// config/config.go
+type Config struct {
+	DBPath             string
+	DatabaseURL        string
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
-	CloudinaryURL      string
+	JWTSecret          string
+	JWTExpiration      int // in hours
+	ServerPort         string
+}
 
-	// JWT secret key
-	JWTSecret string
-)
+var AppConfig Config
 
 func InitConfig() {
-	// Load environment variables from .env (if present)
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found, using system environment variables")
+	AppConfig = Config{
+		DBPath:             getEnv("DB_PATH", "gofiber.db"),
+		DatabaseURL:        getEnv("DATABASE_URL", ""),
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
+		JWTSecret:          getEnv("JWT_SECRET", "secret"),
+		JWTExpiration:      getEnvAsInt("JWT_EXPIRATION", 72),
+		ServerPort:         getEnv("SERVER_PORT", "8000"),
 	}
+}
 
-	DBPath = os.Getenv("DB_PATH")
-	if DBPath == "" {
-		DBPath = "gofiber.db"
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
 	}
+	return defaultValue
+}
 
-	GoogleClientID = os.Getenv("GOOGLE_CLIENT_ID")
-	GoogleClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
-	GoogleRedirectURL = os.Getenv("GOOGLE_REDIRECT_URL")
-
-	JWTSecret = os.Getenv("JWT_SECRET")
-	if JWTSecret == "" {
-		JWTSecret = "secret"
+func getEnvAsInt(key string, defaultValue int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
+	return defaultValue
 }
