@@ -96,3 +96,11 @@ func VerifyJWTRole(c *fiber.Ctx) (userID string, role string, err error) {
 
 	return id, roleStr, nil
 }
+
+func GenerateRefreshToken() (string, error) {
+	claims := jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
