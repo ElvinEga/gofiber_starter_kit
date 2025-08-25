@@ -7,11 +7,15 @@ import (
 
 func JWTProtected() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userId, err := utils.VerifyJWT(c)
+		userID, role, err := utils.VerifyJWT(c)
 		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Unauthorized",
+			})
 		}
-		c.Locals("userId", userId)
+		c.Locals("userID", userID)
+		c.Locals("userRole", role)
 		return c.Next()
 	}
 }
