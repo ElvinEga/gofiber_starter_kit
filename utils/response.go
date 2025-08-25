@@ -22,3 +22,16 @@ func HandleError(c *fiber.Ctx, status int, message string, details ...interface{
 
 	return c.Status(status).JSON(response)
 }
+
+func HandleSuccess(c *fiber.Ctx, message string, data ...interface{}) error {
+	response := fiber.Map{
+		"status":  "success",
+		"message": message,
+	}
+
+	if len(data) > 0 {
+		response["data"] = data[0]
+	}
+
+	return c.JSON(response)
+}
