@@ -219,3 +219,21 @@ func FindUserByEmail(email string) (*models.User, error) {
 	err := database.DB.First(&user, "email = ?", email).Error
 	return &user, err
 }
+
+// services/auth_service.go
+func GenerateTokenPair(user *models.User) (accessToken string, refreshToken string, err error) {
+	accessToken, _ = utils.GenerateJWTRole(user.ID.String(), user.Role)
+
+	refreshUUID := uuid.New()
+	refreshToken, _ = utils.GenerateJWT(refreshUUID.String())
+
+	expiresAt := time.Now().Add(time.Hour * 24 * 7) // 7 days
+	database.DB.Create(&models.RefreshToken{
+		ID:        refreshUUID,
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: expiresAt,
+	})
+
+	return accessToken, refreshToken, nil
+}
