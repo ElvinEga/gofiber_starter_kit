@@ -93,3 +93,14 @@ func GetGoogleUserInfo(code string) (*GoogleUserInfo, error) {
 func GenerateUUID() uuid.UUID {
 	return uuid.New()
 }
+
+// GenerateSecureToken generates a secure random token of the specified length
+func GenerateSecureToken(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to a less secure but still functional method if crypto/rand fails
+		return fmt.Sprintf("%d%s", time.Now().UnixNano(), generateState())
+	}
+
+	return hex.EncodeToString(b)
+}
