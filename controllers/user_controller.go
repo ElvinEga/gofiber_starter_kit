@@ -8,3 +8,11 @@ import (
 func GetUserProfile(c *fiber.Ctx) error {
 	return services.GetUserProfile(c)
 }
+
+func UpdateUser(c *fiber.Ctx) error {
+	return services.UpdateUser(c)
+}
+
+func ChangePassword(c *fiber.Ctx) error {
+	return services.ChangePassword(c)
+}
