@@ -1,14 +1,11 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/models"
 	"github.com/ElvinEga/gofiber_starter/responses"
 	"github.com/ElvinEga/gofiber_starter/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 // Profile godoc
@@ -30,33 +27,12 @@ func GetUserProfile(c *fiber.Ctx) error {
 	return c.JSON(responses.ToUserResponse(user))
 }
 
-func GetUserByID(id string) (*models.User, error) {
-	var user models.User
-	err := database.DB.First(&user, "id = ?", id).Error
-	return &user, err
-}
-
-// services/auth_service.go
-func SendVerificationEmail(userID uuid.UUID) error {
-	user, err := GetUserByID(userID.String())
-	if err != nil {
-		return err
-	}
-
-	token := utils.GenerateSecureToken(32)
-	user.VerificationToken = token
-	database.DB.Save(user)
-
-	// Send email with verification link
-	verificationLink := fmt.Sprintf("https://yourdomain.com/verify?token=%s", token)
-	// Use email service to send verificationLink
-	return nil
-}
-
-// controllers/user_controller.go
 func UpdateUser(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
-	var updateData models.User
+	var updateData struct {
+		Name     string `json:"name"`
+		Username string `json:"username"`
+	}
 
 	if err := c.BodyParser(&updateData); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
@@ -68,11 +44,24 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Update allowed fields only
-	user.Name = updateData.Name
-	user.Username = updateData.Username
-	database.DB.Save(&user)
+	if updateData.Name != "" {
+		user.Name = updateData.Name
+	}
+	if updateData.Username != "" {
+		// Check if username is already taken
+		var existingUser models.User
+		if err := database.DB.Where("username = ? AND id != ?", updateData.Username, userID).First(&existingUser).Error; err == nil {
+			return utils.HandleError(c, fiber.StatusConflict, "Username already taken")
+		}
+		user.Username = updateData.Username
+	}
 
-	return c.JSON(responses.ToUserResponse(user))
+	database.DB.Save(&user)
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "User updated successfully",
+		"data":    responses.ToUserResponse(user),
+	})
 }
 
 func ChangePassword(c *fiber.Ctx) error {
@@ -84,6 +73,10 @@ func ChangePassword(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&req); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Current password and new password are required")
 	}
 
 	var user models.User
@@ -98,5 +91,14 @@ func ChangePassword(c *fiber.Ctx) error {
 	user.Password = utils.HashPassword(req.NewPassword)
 	database.DB.Save(&user)
 
-	return c.JSON(fiber.Map{"status": "success", "message": "Password updated"})
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Password updated successfully",
+	})
+}
+
+func GetUserByID(id string) (*models.User, error) {
+	var user models.User
+	err := database.DB.First(&user, "id = ?", id).Error
+	return &user, err
 }
