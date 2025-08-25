@@ -95,7 +95,7 @@ func Login(c *fiber.Ctx) error {
 		Status:  "success",
 		Message: "Login successful",
 		Token:   token,
-		User:    responses.ToUserResponse(user),
+		User:    responses.ToUserResponse(*user),
 	})
 }
 
