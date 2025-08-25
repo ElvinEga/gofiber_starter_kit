@@ -105,7 +105,7 @@ func generateJWT(userID uuid.UUID) (string, error) {
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(config.JWTSecret))
+	return token.SignedString([]byte(config.AppConfig.JWTSecret))
 }
 
 func GoogleLogin(c *fiber.Ctx) error {
@@ -180,7 +180,7 @@ func Logout(c *fiber.Ctx) error {
 
 	// Parse token to extract expiration (using the same secret).
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte(config.JWTSecret), nil
+		return []byte(config.AppConfig.JWTSecret), nil
 	})
 	if err != nil || !token.Valid {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
