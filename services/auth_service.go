@@ -130,11 +130,14 @@ func GoogleCallback(c *fiber.Ctx) error {
 	var user models.User
 	if err := database.DB.Where("email = ?", userInfo.Email).First(&user).Error; err != nil {
 		// If not, create a new user with auto‑generated username.
-		username := utils.GenerateUsername(userInfo.Name)
+
 		user = models.User{
-			Email:    userInfo.Email,
-			Name:     userInfo.Name,
-			Username: username,
+			ID:         utils.GenerateUUID(),
+			Email:      userInfo.Email,
+			Name:       userInfo.Name,
+			Username:   utils.GenerateUsername(userInfo.Name),
+			Role:       "user",
+			IsVerified: true,
 		}
 		database.DB.Create(&user)
 	}
