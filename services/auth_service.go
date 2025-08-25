@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ElvinEga/gofiber_starter/blacklist"
@@ -214,19 +215,19 @@ func Logout(c *fiber.Ctx) error {
 	})
 }
 
-func FindUserByEmail(email string) (*models.User, error) {
-	var user models.User
-	err := database.DB.First(&user, "email = ?", email).Error
-	return &user, err
-}
+func GenerateTokenPair(user *models.User) (string, string, error) {
+	accessToken, err := utils.GenerateJWTRole(user.ID.String(), user.Role)
+	if err != nil {
+		return "", "", err
+	}
 
-// services/auth_service.go
-func GenerateTokenPair(user *models.User) (accessToken string, refreshToken string, err error) {
-	accessToken, _ = utils.GenerateJWTRole(user.ID.String(), user.Role)
+	refreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
 
+	// Store refresh token in database
 	refreshUUID := uuid.New()
-	refreshToken, _ = utils.GenerateJWT(refreshUUID.String())
-
 	expiresAt := time.Now().Add(time.Hour * 24 * 7) // 7 days
 	database.DB.Create(&models.RefreshToken{
 		ID:        refreshUUID,
@@ -236,4 +237,147 @@ func GenerateTokenPair(user *models.User) (accessToken string, refreshToken stri
 	})
 
 	return accessToken, refreshToken, nil
+}
+
+func RefreshToken(c *fiber.Ctx) error {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	if req.RefreshToken == "" {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Refresh token is required")
+	}
+
+	// Find refresh token in database
+	var refreshToken models.RefreshToken
+	if err := database.DB.Where("token = ? AND expires_at > ?", req.RefreshToken, time.Now()).First(&refreshToken).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusUnauthorized, "Invalid or expired refresh token")
+	}
+
+	// Get user
+	var user models.User
+	if err := database.DB.First(&user, "id = ?", refreshToken.UserID).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusNotFound, "User not found")
+	}
+
+	// Generate new token pair
+	accessToken, newRefreshToken, err := GenerateTokenPair(&user)
+	if err != nil {
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Could not generate tokens")
+	}
+
+	// Delete old refresh token
+	database.DB.Delete(&refreshToken)
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Token refreshed successfully",
+		"data": fiber.Map{
+			"access_token":  accessToken,
+			"refresh_token": newRefreshToken,
+		},
+	})
+}
+
+func VerifyEmail(c *fiber.Ctx) error {
+	token := c.Query("token")
+	if token == "" {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Verification token is required")
+	}
+
+	var user models.User
+	if err := database.DB.Where("verification_token = ?", token).First(&user).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusNotFound, "Invalid verification token")
+	}
+
+	user.IsVerified = true
+	user.EmailVerifiedAt = time.Now()
+	user.VerificationToken = ""
+	database.DB.Save(&user)
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Email verified successfully",
+	})
+}
+
+func RequestPasswordReset(c *fiber.Ctx) error {
+	var req struct {
+		Email string `json:"email"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	if req.Email == "" {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Email is required")
+	}
+
+	user, err := FindUserByEmail(req.Email)
+	if err != nil {
+		// Don't reveal if email exists
+		return c.JSON(fiber.Map{
+			"status":  "success",
+			"message": "If your email is registered, you will receive a password reset link",
+		})
+	}
+
+	resetToken := utils.GenerateSecureToken(32)
+	resetExpiresAt := time.Now().Add(time.Hour) // 1 hour expiration
+
+	user.ResetToken = resetToken
+	user.ResetExpiresAt = resetExpiresAt
+	database.DB.Save(user)
+
+	// Generate reset link
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", config.AppConfig.FrontendURL, resetToken)
+
+	// In a real app, send email with resetLink
+	fmt.Printf("Password reset link: %s\n", resetLink)
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "If your email is registered, you will receive a password reset link",
+	})
+}
+
+func ResetPassword(c *fiber.Ctx) error {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
+	}
+
+	if req.Token == "" || req.NewPassword == "" {
+		return utils.HandleError(c, fiber.StatusBadRequest, "Token and new password are required")
+	}
+
+	var user models.User
+	if err := database.DB.Where("reset_token = ? AND reset_expires_at > ?", req.Token, time.Now()).First(&user).Error; err != nil {
+		return utils.HandleError(c, fiber.StatusUnauthorized, "Invalid or expired reset token")
+	}
+
+	user.Password = utils.HashPassword(req.NewPassword)
+	user.ResetToken = ""
+	user.ResetExpiresAt = time.Time{}
+	database.DB.Save(&user)
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Password reset successfully",
+	})
+}
+
+func FindUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := database.DB.First(&user, "email = ?", email).Error
+	return &user, err
 }
