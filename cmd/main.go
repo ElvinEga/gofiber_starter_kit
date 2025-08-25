@@ -6,7 +6,6 @@ import (
 	"github.com/ElvinEga/gofiber_starter/config"
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/routes"
-	"github.com/ElvinEga/gofiber_starter/utils"
 	"github.com/garrettladley/fiberpaginate/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -17,11 +16,6 @@ func main() {
 	database.ConnectDB()
 	database.SeedSuperAdmin()
 	database.MigrateDB()
-
-	err := utils.InitCloudinary()
-	if err != nil {
-		log.Fatalf("Failed to initialize Cloudinary: %v", err)
-	}
 
 	app := fiber.New(fiber.Config{
 		BodyLimit: 10 * 1024 * 1024, // 10MB limit
@@ -35,7 +29,6 @@ func main() {
 	app.Static("/docs", "./docs")
 	app.Use(fiberpaginate.New())
 	routes.SetupRoutes(app)
-	routes.RegisterAdminRoutes(app)
 
 	log.Fatal(app.Listen(":8000"))
 }

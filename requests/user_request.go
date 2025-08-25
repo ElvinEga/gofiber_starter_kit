@@ -1,11 +1,5 @@
 package requests
 
-import (
-	"time"
-
-	"github.com/ElvinEga/gofiber_starter/models"
-)
-
 type RegisterRequest struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`

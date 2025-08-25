@@ -8,6 +8,8 @@ import (
 	"github.com/ElvinEga/gofiber_starter/config"
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/models"
+	"github.com/ElvinEga/gofiber_starter/requests"
+	"github.com/ElvinEga/gofiber_starter/responses"
 	"github.com/ElvinEga/gofiber_starter/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -21,13 +23,13 @@ import (
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param registerRequest body RegisterRequest true "Register Request"
-// @Success 201 {object} AuthResponse
-// @Failure 400 {object} AuthResponse
-// @Failure 500 {object} AuthResponse
+// @Param requests.RegisterRequest body requests.RegisterRequest true "Register Request"
+// @Success 201 {object} responses.AuthResponse
+// @Failure 400 {object} responses.AuthResponse
+// @Failure 500 {object} responses.AuthResponse
 // @Router /api/register [post]
 func Register(c *fiber.Ctx) error {
-	var req RegisterRequest
+	var req requests.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
 	}
@@ -55,13 +57,7 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	token, _ := utils.GenerateJWT(newUser.ID.String())
-	return c.Status(201).JSON(fiber.Map{"token": token, "user": &UserResponse{
-		ID:       newUser.ID.String(),
-		Email:    newUser.Email,
-		Name:     newUser.Name,
-		Username: newUser.Username,
-		Role:     newUser.Role,
-	}})
+	return c.Status(201).JSON(fiber.Map{"token": token, "user": responses.ToUserResponse(newUser)})
 }
 
 // Login godoc
@@ -70,16 +66,16 @@ func Register(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param loginRequest body LoginRequest true "Login Request"
-// @Success 200 {object} AuthResponse
-// @Failure 400 {object} AuthResponse
-// @Failure 401 {object} AuthResponse
-// @Failure 500 {object} AuthResponse
+// @Param requests.LoginRequest body requests.LoginRequest true "Login Request"
+// @Success 200 {object} responses.AuthResponse
+// @Failure 400 {object} responses.AuthResponse
+// @Failure 401 {object} responses.AuthResponse
+// @Failure 500 {object} responses.AuthResponse
 // @Router /api/login [post]
 func Login(c *fiber.Ctx) error {
-	var req LoginRequest
+	var req requests.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid input",
 		})
@@ -88,24 +84,18 @@ func Login(c *fiber.Ctx) error {
 	user, err := FindUserByEmail(req.Email)
 
 	if err != nil || !utils.CheckPasswordHash(req.Password, user.Password) {
-		return c.Status(fiber.StatusUnauthorized).JSON(AuthResponse{
+		return c.Status(fiber.StatusUnauthorized).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid credentials",
 		})
 	}
 
 	token, _ := utils.GenerateJWTRole(user.ID.String(), "User")
-	return c.JSON(AuthResponse{
+	return c.JSON(responses.AuthResponse{
 		Status:  "success",
 		Message: "Login successful",
 		Token:   token,
-		User: &UserResponse{
-			ID:       user.ID.String(),
-			Email:    user.Email,
-			Name:     user.Name,
-			Username: user.Username,
-			Role:     user.Role,
-		},
+		User:    responses.ToUserResponse(user),
 	})
 }
 
@@ -163,13 +153,13 @@ func GoogleCallback(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} AuthResponse
-// @Failure 401 {object} AuthResponse
+// @Success 200 {object} responses.AuthResponse
+// @Failure 401 {object} responses.AuthResponse
 // @Router /api/logout [post]
 func Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Authorization header not found",
 		})
@@ -178,7 +168,7 @@ func Logout(c *fiber.Ctx) error {
 	// Expect token in format "Bearer <token>"
 	const bearerPrefix = "Bearer "
 	if len(authHeader) <= len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid authorization header",
 		})
@@ -190,7 +180,7 @@ func Logout(c *fiber.Ctx) error {
 		return []byte(config.JWTSecret), nil
 	})
 	if err != nil || !token.Valid {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid token",
 		})
@@ -198,14 +188,14 @@ func Logout(c *fiber.Ctx) error {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid token claims",
 		})
 	}
 	expFloat, ok := claims["exp"].(float64)
 	if !ok {
-		return c.Status(fiber.StatusBadRequest).JSON(AuthResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid expiration time",
 		})
@@ -215,7 +205,7 @@ func Logout(c *fiber.Ctx) error {
 	// Add token to blacklist.
 	blacklist.Add(tokenStr, expirationTime)
 
-	return c.JSON(AuthResponse{
+	return c.JSON(responses.AuthResponse{
 		Status:  "success",
 		Message: "Logout successful",
 	})
