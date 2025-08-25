@@ -13,6 +13,7 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/register", controllers.Register)
 	auth.Post("/login", controllers.Login)
 	auth.Post("/google", controllers.GoogleSSO)
+	auth.Get("/google/callback", controllers.GoogleCallback)
 	auth.Post("/logout", controllers.Logout)
 
 	user := api.Group("/user", middlewares.JWTProtected())
