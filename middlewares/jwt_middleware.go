@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/ElvinEga/gofiber_starter/utils"
+	"github.com/ElvinEga/adeya_backend/utils"
 	"github.com/gofiber/fiber/v2"
 )
 

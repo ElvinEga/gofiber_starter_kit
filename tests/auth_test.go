@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"github.com/ElvinEga/gofiber_starter/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/ElvinEga/adeya_backend/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPasswordHashing(t *testing.T) {

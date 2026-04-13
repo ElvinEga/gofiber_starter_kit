@@ -5,18 +5,28 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ElvinEga/gofiber_starter/blacklist"
-	"github.com/ElvinEga/gofiber_starter/config"
-	"github.com/ElvinEga/gofiber_starter/database"
-	"github.com/ElvinEga/gofiber_starter/models"
-	"github.com/ElvinEga/gofiber_starter/requests"
-	"github.com/ElvinEga/gofiber_starter/responses"
-	"github.com/ElvinEga/gofiber_starter/utils"
+	"github.com/ElvinEga/adeya_backend/blacklist"
+	"github.com/ElvinEga/adeya_backend/config"
+	"github.com/ElvinEga/adeya_backend/database"
+	"github.com/ElvinEga/adeya_backend/models"
+	"github.com/ElvinEga/adeya_backend/requests"
+	"github.com/ElvinEga/adeya_backend/responses"
+	"github.com/ElvinEga/adeya_backend/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+func newAuthResponse(user models.User, accessToken, refreshToken, message string) responses.AuthResponse {
+	return responses.AuthResponse{
+		Status:       "success",
+		Message:      message,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		User:         responses.ToUserResponse(user),
+	}
+}
 
 // Register godoc
 // @Summary Register a new user
@@ -32,15 +42,24 @@ import (
 func Register(c *fiber.Ctx) error {
 	var req requests.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
+		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Invalid payload",
+		})
 	}
 
 	// Check email uniqueness
 	var existing models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&existing).Error; err == nil {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "email already exists"})
+		return c.Status(fiber.StatusConflict).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Email already exists",
+		})
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "db error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Database error",
+		})
 	}
 
 	// Create user
@@ -54,11 +73,21 @@ func Register(c *fiber.Ctx) error {
 		IsVerified: false,
 	}
 	if err := database.DB.Create(&newUser).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not create user"})
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Could not create user",
+		})
 	}
 
-	token, _ := utils.GenerateJWT(newUser.ID.String())
-	return c.Status(201).JSON(fiber.Map{"token": token, "user": responses.ToUserResponse(newUser)})
+	accessToken, refreshToken, err := GenerateTokenPair(&newUser)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Could not generate tokens",
+		})
+	}
+
+	return c.Status(201).JSON(newAuthResponse(newUser, accessToken, refreshToken, "Registration successful"))
 }
 
 // Login godoc
@@ -91,13 +120,15 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	token, _ := utils.GenerateJWTRole(user.ID.String(), "user")
-	return c.JSON(responses.AuthResponse{
-		Status:  "success",
-		Message: "Login successful",
-		Token:   token,
-		User:    responses.ToUserResponse(*user),
-	})
+	accessToken, refreshToken, err := GenerateTokenPair(user)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.AuthResponse{
+			Status:  "error",
+			Message: "Could not generate tokens",
+		})
+	}
+
+	return c.JSON(newAuthResponse(*user, accessToken, refreshToken, "Login successful"))
 }
 
 func generateJWT(userID uuid.UUID) (string, error) {
@@ -274,12 +305,11 @@ func RefreshToken(c *fiber.Ctx) error {
 	database.DB.Delete(&refreshToken)
 
 	return c.JSON(fiber.Map{
-		"status":  "success",
-		"message": "Token refreshed successfully",
-		"data": fiber.Map{
-			"access_token":  accessToken,
-			"refresh_token": newRefreshToken,
-		},
+		"status":        "success",
+		"message":       "Token refreshed successfully",
+		"access_token":  accessToken,
+		"refresh_token": newRefreshToken,
+		"user":          responses.ToUserResponse(user),
 	})
 }
 

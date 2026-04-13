@@ -1,4 +1,4 @@
-module github.com/ElvinEga/gofiber_starter
+module github.com/ElvinEga/adeya_backend
 
 go 1.23.4
 

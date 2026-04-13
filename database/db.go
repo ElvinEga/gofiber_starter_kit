@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ElvinEga/gofiber_starter/models"
+	"github.com/ElvinEga/adeya_backend/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

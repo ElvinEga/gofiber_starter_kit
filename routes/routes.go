@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/ElvinEga/gofiber_starter/controllers"
-	"github.com/ElvinEga/gofiber_starter/middlewares"
+	"github.com/ElvinEga/adeya_backend/controllers"
+	"github.com/ElvinEga/adeya_backend/middlewares"
 	"github.com/gofiber/fiber/v2"
 )
 

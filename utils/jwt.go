@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ElvinEga/gofiber_starter/blacklist"
+	"github.com/ElvinEga/adeya_backend/blacklist"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 )

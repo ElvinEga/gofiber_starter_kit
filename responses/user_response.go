@@ -3,7 +3,7 @@ package responses
 import (
 	"time"
 
-	"github.com/ElvinEga/gofiber_starter/models"
+	"github.com/ElvinEga/adeya_backend/models"
 )
 
 type UserResponse struct {
@@ -32,8 +32,9 @@ func ToUserResponse(u models.User) UserResponse {
 }
 
 type AuthResponse struct {
-	Status  string       `json:"status"`
-	Message string       `json:"message"`
-	Token   string       `json:"token,omitempty"` // Token is optional
-	User    UserResponse `json:"user,omitempty"`  // User is optional
+	Status       string       `json:"status"`
+	Message      string       `json:"message"`
+	AccessToken  string       `json:"access_token,omitempty"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+	User         UserResponse `json:"user,omitempty"`
 }

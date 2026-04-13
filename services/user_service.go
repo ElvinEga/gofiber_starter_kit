@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/ElvinEga/gofiber_starter/database"
-	"github.com/ElvinEga/gofiber_starter/models"
-	"github.com/ElvinEga/gofiber_starter/responses"
-	"github.com/ElvinEga/gofiber_starter/utils"
+	"github.com/ElvinEga/adeya_backend/database"
+	"github.com/ElvinEga/adeya_backend/models"
+	"github.com/ElvinEga/adeya_backend/responses"
+	"github.com/ElvinEga/adeya_backend/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
