@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type ErrorResponse struct {
@@ -10,7 +10,7 @@ type ErrorResponse struct {
 	Details interface{} `json:"details,omitempty"`
 }
 
-func HandleError(c *fiber.Ctx, status int, message string, details ...interface{}) error {
+func HandleError(c fiber.Ctx, status int, message string, details ...interface{}) error {
 	response := ErrorResponse{
 		Status:  "error",
 		Message: message,
@@ -23,7 +23,7 @@ func HandleError(c *fiber.Ctx, status int, message string, details ...interface{
 	return c.Status(status).JSON(response)
 }
 
-func HandleSuccess(c *fiber.Ctx, message string, data ...interface{}) error {
+func HandleSuccess(c fiber.Ctx, message string, data ...interface{}) error {
 	response := fiber.Map{
 		"status":  "success",
 		"message": message,
