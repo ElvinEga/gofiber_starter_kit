@@ -5,10 +5,10 @@ import (
 
 	"github.com/ElvinEga/gofiber_starter/config"
 	"github.com/ElvinEga/gofiber_starter/database"
+	"github.com/ElvinEga/gofiber_starter/internal/swaggerui"
 	"github.com/ElvinEga/gofiber_starter/routes"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
-	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
 // @title Go Fiber Starter Kit API
@@ -36,7 +36,7 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
 	}))
-	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+	app.Get("/swagger/*", swaggerui.Handler())
 	// app.Static("/docs", "./docs")
 	routes.SetupRoutes(app)
 
