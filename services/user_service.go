@@ -5,7 +5,7 @@ import (
 	"github.com/ElvinEga/gofiber_starter/models"
 	"github.com/ElvinEga/gofiber_starter/responses"
 	"github.com/ElvinEga/gofiber_starter/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // Profile godoc
@@ -17,7 +17,7 @@ import (
 // @Success 200 {object} responses.UserResponse
 // @Failure 401 {object} responses.UserResponse
 // @Router /api/profile [get]
-func GetUserProfile(c *fiber.Ctx) error {
+func GetUserProfile(c fiber.Ctx) error {
 	userId := c.Locals("userID").(string)
 	var user models.User
 
@@ -27,14 +27,14 @@ func GetUserProfile(c *fiber.Ctx) error {
 	return c.JSON(responses.ToUserResponse(user))
 }
 
-func UpdateUser(c *fiber.Ctx) error {
+func UpdateUser(c fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 	var updateData struct {
 		Name     string `json:"name"`
 		Username string `json:"username"`
 	}
 
-	if err := c.BodyParser(&updateData); err != nil {
+	if err := c.Bind().Body(&updateData); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
@@ -64,14 +64,14 @@ func UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
-func ChangePassword(c *fiber.Ctx) error {
+func ChangePassword(c fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 	var req struct {
 		CurrentPassword string `json:"current_password"`
 		NewPassword     string `json:"new_password"`
 	}
 
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
