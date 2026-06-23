@@ -6,9 +6,8 @@ import (
 	"github.com/ElvinEga/gofiber_starter/config"
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/routes"
-	"github.com/garrettladley/fiberpaginate/v2"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
@@ -32,14 +31,13 @@ func main() {
 		BodyLimit: 10 * 1024 * 1024, // 10MB limit
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000",
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
 	}))
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 	// app.Static("/docs", "./docs")
-	app.Use(fiberpaginate.New())
 	routes.SetupRoutes(app)
 
 	log.Fatal(app.Listen(":8000"))
