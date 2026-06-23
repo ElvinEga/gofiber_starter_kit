@@ -12,8 +12,8 @@ import (
 	"github.com/ElvinEga/gofiber_starter/requests"
 	"github.com/ElvinEga/gofiber_starter/responses"
 	"github.com/ElvinEga/gofiber_starter/utils"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/gofiber/fiber/v3"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -39,9 +39,9 @@ func newAuthResponse(user models.User, accessToken, refreshToken, message string
 // @Failure 400 {object} responses.AuthResponse
 // @Failure 500 {object} responses.AuthResponse
 // @Router /api/register [post]
-func Register(c *fiber.Ctx) error {
+func Register(c fiber.Ctx) error {
 	var req requests.RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid payload",
@@ -102,9 +102,9 @@ func Register(c *fiber.Ctx) error {
 // @Failure 401 {object} responses.AuthResponse
 // @Failure 500 {object} responses.AuthResponse
 // @Router /api/login [post]
-func Login(c *fiber.Ctx) error {
+func Login(c fiber.Ctx) error {
 	var req requests.LoginRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
 			Status:  "error",
 			Message: "Invalid input",
@@ -140,13 +140,13 @@ func generateJWT(userID uuid.UUID) (string, error) {
 	return token.SignedString([]byte(config.AppConfig.JWTSecret))
 }
 
-func GoogleLogin(c *fiber.Ctx) error {
+func GoogleLogin(c fiber.Ctx) error {
 	url := utils.GetGoogleOAuthURL()
-	return c.Redirect(url, fiber.StatusTemporaryRedirect)
+	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(url)
 }
 
 // GoogleCallback handles the callback from Google OAuth.
-func GoogleCallback(c *fiber.Ctx) error {
+func GoogleCallback(c fiber.Ctx) error {
 	code := c.Query("code")
 	if code == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Code not found"})
@@ -191,7 +191,7 @@ func GoogleCallback(c *fiber.Ctx) error {
 // @Success 200 {object} responses.AuthResponse
 // @Failure 401 {object} responses.AuthResponse
 // @Router /api/logout [post]
-func Logout(c *fiber.Ctx) error {
+func Logout(c fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(responses.AuthResponse{
@@ -270,12 +270,12 @@ func GenerateTokenPair(user *models.User) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
-func RefreshToken(c *fiber.Ctx) error {
+func RefreshToken(c fiber.Ctx) error {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}
 
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
@@ -313,7 +313,7 @@ func RefreshToken(c *fiber.Ctx) error {
 	})
 }
 
-func VerifyEmail(c *fiber.Ctx) error {
+func VerifyEmail(c fiber.Ctx) error {
 	token := c.Query("token")
 	if token == "" {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Verification token is required")
@@ -335,12 +335,12 @@ func VerifyEmail(c *fiber.Ctx) error {
 	})
 }
 
-func RequestPasswordReset(c *fiber.Ctx) error {
+func RequestPasswordReset(c fiber.Ctx) error {
 	var req struct {
 		Email string `json:"email"`
 	}
 
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
@@ -376,13 +376,13 @@ func RequestPasswordReset(c *fiber.Ctx) error {
 	})
 }
 
-func ResetPassword(c *fiber.Ctx) error {
+func ResetPassword(c fiber.Ctx) error {
 	var req struct {
 		Token       string `json:"token"`
 		NewPassword string `json:"new_password"`
 	}
 
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Invalid input")
 	}
 
