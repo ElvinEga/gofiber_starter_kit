@@ -9,7 +9,7 @@ import (
 	"github.com/ElvinEga/gofiber_starter/config"
 	"github.com/ElvinEga/gofiber_starter/database"
 	"github.com/ElvinEga/gofiber_starter/routes"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +56,7 @@ func performJSONRequest(t *testing.T, app *fiber.App, method, path string, body 
 	req := httptest.NewRequest(method, path, bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := app.Test(req, -1)
+	resp, err := app.Test(req, fiber.TestConfig{Timeout: 0, FailOnTimeout: false})
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
