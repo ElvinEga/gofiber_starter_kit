@@ -2,17 +2,17 @@ package controllers
 
 import (
 	"github.com/ElvinEga/gofiber_starter/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func GetUserProfile(c *fiber.Ctx) error {
+func GetUserProfile(c fiber.Ctx) error {
 	return services.GetUserProfile(c)
 }
 
-func UpdateUser(c *fiber.Ctx) error {
+func UpdateUser(c fiber.Ctx) error {
 	return services.UpdateUser(c)
 }
 
-func ChangePassword(c *fiber.Ctx) error {
+func ChangePassword(c fiber.Ctx) error {
 	return services.ChangePassword(c)
 }
