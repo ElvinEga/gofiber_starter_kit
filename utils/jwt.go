@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/ElvinEga/gofiber_starter/blacklist"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/gofiber/fiber/v3"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
@@ -16,7 +17,7 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 type JWTClaims struct {
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func GenerateJWT(userId string) (string, error) {
@@ -38,7 +39,7 @@ func GenerateJWTRole(userID string, role string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func VerifyJWT(c *fiber.Ctx) (userID string, role string, err error) {
+func VerifyJWT(c fiber.Ctx) (userID string, role string, err error) {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return "", "", errors.New("missing token")
@@ -68,7 +69,7 @@ func VerifyJWT(c *fiber.Ctx) (userID string, role string, err error) {
 
 	return "", "", errors.New("invalid token claims")
 }
-func VerifyJWTRole(c *fiber.Ctx) (userID string, role string, err error) {
+func VerifyJWTRole(c fiber.Ctx) (userID string, role string, err error) {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return "", "", errors.New("Missing token")
@@ -98,8 +99,10 @@ func VerifyJWTRole(c *fiber.Ctx) (userID string, role string, err error) {
 }
 
 func GenerateRefreshToken() (string, error) {
-	claims := jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)), // 7 days
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		ID:        uuid.NewString(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
