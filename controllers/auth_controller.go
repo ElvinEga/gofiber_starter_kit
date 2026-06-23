@@ -2,41 +2,41 @@ package controllers
 
 import (
 	"github.com/ElvinEga/gofiber_starter/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func Register(c *fiber.Ctx) error {
+func Register(c fiber.Ctx) error {
 	return services.Register(c)
 }
 
-func Login(c *fiber.Ctx) error {
+func Login(c fiber.Ctx) error {
 	return services.Login(c)
 }
 
-func GoogleSSO(c *fiber.Ctx) error {
+func GoogleSSO(c fiber.Ctx) error {
 	return services.GoogleLogin(c)
 }
 
-func GoogleCallback(c *fiber.Ctx) error {
+func GoogleCallback(c fiber.Ctx) error {
 	return services.GoogleCallback(c)
 }
 
-func Logout(c *fiber.Ctx) error {
+func Logout(c fiber.Ctx) error {
 	return services.Logout(c)
 }
 
-func RefreshToken(c *fiber.Ctx) error {
+func RefreshToken(c fiber.Ctx) error {
 	return services.RefreshToken(c)
 }
 
-func VerifyEmail(c *fiber.Ctx) error {
+func VerifyEmail(c fiber.Ctx) error {
 	return services.VerifyEmail(c)
 }
 
-func RequestPasswordReset(c *fiber.Ctx) error {
+func RequestPasswordReset(c fiber.Ctx) error {
 	return services.RequestPasswordReset(c)
 }
 
-func ResetPassword(c *fiber.Ctx) error {
+func ResetPassword(c fiber.Ctx) error {
 	return services.ResetPassword(c)
 }
