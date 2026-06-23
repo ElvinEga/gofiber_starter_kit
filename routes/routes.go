@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/ElvinEga/gofiber_starter/controllers"
 	"github.com/ElvinEga/gofiber_starter/middlewares"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func SetupRoutes(app *fiber.App) {
