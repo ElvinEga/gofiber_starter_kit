@@ -3,7 +3,7 @@ package responses
 import (
 	"time"
 
-	"github.com/ElvinEga/adeya_backend/models"
+	"github.com/ElvinEga/gofiber_starter/models"
 )
 
 type UserResponse struct {

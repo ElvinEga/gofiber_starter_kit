@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/ElvinEga/adeya_backend/services"
+	"github.com/ElvinEga/gofiber_starter/services"
 	"github.com/gofiber/fiber/v2"
 )
 

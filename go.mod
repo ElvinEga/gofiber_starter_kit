@@ -1,6 +1,6 @@
-module github.com/ElvinEga/adeya_backend
+module github.com/ElvinEga/gofiber_starter
 
-go 1.23.4
+go 1.26.4
 
 require (
 	github.com/garrettladley/fiberpaginate/v2 v2.0.4

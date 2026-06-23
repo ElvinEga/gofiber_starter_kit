@@ -3,10 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/ElvinEga/adeya_backend/config"
-	"github.com/ElvinEga/adeya_backend/database"
-	_ "github.com/ElvinEga/adeya_backend/docs"
-	"github.com/ElvinEga/adeya_backend/routes"
+	"github.com/ElvinEga/gofiber_starter/config"
+	"github.com/ElvinEga/gofiber_starter/database"
+	"github.com/ElvinEga/gofiber_starter/routes"
 	"github.com/garrettladley/fiberpaginate/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"

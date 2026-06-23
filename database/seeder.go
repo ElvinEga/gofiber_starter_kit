@@ -3,8 +3,8 @@ package database
 import (
 	"fmt"
 
-	"github.com/ElvinEga/adeya_backend/models"
-	"github.com/ElvinEga/adeya_backend/utils"
+	"github.com/ElvinEga/gofiber_starter/models"
+	"github.com/ElvinEga/gofiber_starter/utils"
 )
 
 func SeedSuperAdmin() {

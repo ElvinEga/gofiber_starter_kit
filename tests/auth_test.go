@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/ElvinEga/adeya_backend/utils"
+	"github.com/ElvinEga/gofiber_starter/utils"
 	"github.com/stretchr/testify/assert"
 )
 

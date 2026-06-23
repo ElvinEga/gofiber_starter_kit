@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ElvinEga/adeya_backend/config"
-	"github.com/ElvinEga/adeya_backend/database"
-	"github.com/ElvinEga/adeya_backend/routes"
+	"github.com/ElvinEga/gofiber_starter/config"
+	"github.com/ElvinEga/gofiber_starter/database"
+	"github.com/ElvinEga/gofiber_starter/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

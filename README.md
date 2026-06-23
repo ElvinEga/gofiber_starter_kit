@@ -43,7 +43,7 @@ A production-ready Go REST API starter kit built with Fiber framework. Includes 
 ## Project Structure
 
 ```
-adeya_backend_kit/
+gofiber_starter_kit/
 ├── blacklist/          # Token blacklist management
 ├── cmd/               # Application entry point
 ├── config/            # Configuration management
@@ -72,7 +72,7 @@ adeya_backend_kit/
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd adeya_backend_kit
+cd gofiber_starter_kit
 ```
 
 2. Install dependencies:

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/ElvinEga/adeya_backend/models"
+	"github.com/ElvinEga/gofiber_starter/models"
 )
 
 func MigrateDB() {
